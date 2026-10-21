@@ -64,7 +64,7 @@ export function Palette() {
                     title={c.desc}
                     className="group relative flex cursor-grab items-center gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 py-2 transition-all hover:border-teal-400/40 hover:bg-[var(--panel)] active:cursor-grabbing"
                   >
-                    <div className="flex h-9 w-12 shrink-0 items-center justify-center">
+                    <div className="pointer-events-none flex h-9 w-12 shrink-0 items-center justify-center">
                       <PartVisual type={c.type} />
                     </div>
                     <div className="min-w-0">

@@ -68,7 +68,7 @@ function ComponentNodeInner({ id, data, selected }: NodeProps) {
 
       {/* body with pin rows */}
       <div className="relative px-0 pb-1 pt-2">
-        <div className="flex h-[92px] items-center justify-center px-3">
+        <div className="pointer-events-none flex h-[92px] items-center justify-center px-3">
           <PartVisual type={compType} props={props} />
         </div>
         <div>
