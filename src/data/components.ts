@@ -416,17 +416,6 @@ export const COMPONENTS: ComponentDef[] = [
     ],
     bom: { part: '7-seg display', spec: 'Common cathode', usd: 0.4 },
   },
-
-  {
-    type: 'breadboard',
-    name: 'Breadboard',
-    category: 'Passive',
-    desc: 'Solderless breadboard for prototyping (visual only).',
-    width: 320,
-    passive: true,
-    pins: [],
-    bom: { part: 'Breadboard', spec: '830 tie-points', usd: 2.0 },
-  },
 ];
 
 export const getComponent = (type: string): ComponentDef | undefined =>

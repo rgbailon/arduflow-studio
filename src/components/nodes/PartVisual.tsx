@@ -20,26 +20,8 @@ export function PartVisual({
     case 'oled': return <Oled />;
     case 'buzzer': return <Buzzer />;
     case 'motor': return <Motor />;
-    case 'breadboard': return <Breadboard />;
     default: return <Generic label={type} />;
   }
-}
-
-function Breadboard() {
-  const holes = [];
-  for (let r = 0; r < 6; r++) {
-    for (let c = 0; c < 17; c++) {
-      holes.push(<circle key={`${r}-${c}`} cx={12 + c * 16} cy={12 + r * 16} r="3" fill="#cbd5e1" />);
-    }
-  }
-  return (
-    <svg viewBox="0 0 280 120" className="h-full w-auto" role="img" aria-label="Breadboard">
-      <rect x="4" y="4" width="272" height="112" rx="8" fill="#f8fafc" stroke="#94a3b8" strokeWidth="2" />
-      <rect x="10" y="10" width="260" height="100" rx="4" fill="#e2e8f0" />
-      {holes}
-      <line x1="4" y1="60" x2="276" y2="60" stroke="#cbd5e1" strokeWidth="1" />
-    </svg>
-  );
 }
 
 function Generic({ label }: { label: string }) {
