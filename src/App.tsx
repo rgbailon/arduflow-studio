@@ -1,5 +1,24 @@
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('App error:', error, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex h-screen items-center justify-center bg-[var(--bg)] p-6 text-[var(--text)]">
+          <div className="max-w-xl rounded-xl border border-red-500/40 bg-red-500/10 p-6">
+            <h1 className="text-lg font-bold text-red-300">Something went wrong</h1>
+            <pre className="mt-3 whitespace-pre-wrap font-mono text-xs text-red-200">{this.state.error.message}</pre>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { TopBar, FlashModal } from './components/TopBar';
 import { Palette } from './components/Palette';
@@ -20,6 +39,7 @@ export default function App() {
   }, [theme]);
 
   return (
+    <ErrorBoundary>
     <ReactFlowProvider>
       <div className="flex h-screen flex-col overflow-hidden bg-[var(--bg)] text-slate-200">
         <TopBar onFlash={() => setFlashOpen(true)} theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />
@@ -72,5 +92,6 @@ export default function App() {
         <FlashModal open={flashOpen} onClose={() => setFlashOpen(false)} />
       </div>
     </ReactFlowProvider>
+    </ErrorBoundary>
   );
 }
