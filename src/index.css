@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-rise: rise 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-toast: toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: #0a0e10;
+  color: #cbd5e1;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(45, 212, 191, 0.28);
+  color: #ecfeff;
+}
+
+/* ── scrollbars ─────────────────────────────────────────────── */
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: #1f2b32;
+  border-radius: 8px;
+  border: 2px solid #0a0e10;
+}
+*::-webkit-scrollbar-thumb:hover { background: #2b3a43; }
+
+/* ── react flow chrome ──────────────────────────────────────── */
+.react-flow { background: #0a0e10; }
+.react-flow__node { outline: none; }
+.react-flow__node:focus { outline: none; }
+
+.react-flow__handle.pin-handle {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #0a0e10;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.12), 0 0 8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: crosshair;
+  z-index: 20;
+}
+.react-flow__handle.pin-handle:hover,
+.react-flow__handle.pin-handle.connectingfrom {
+  box-shadow: 0 0 0 2.5px rgba(45, 212, 191, 0.6), 0 0 16px rgba(45, 212, 191, 0.5);
+}
+.react-flow__handle.board-pin {
+  width: 12px;
+  height: 12px;
+}
+
+.react-flow__edge-path {
+  transition: stroke-width 0.12s ease, opacity 0.12s ease;
+}
+.react-flow__edge:hover .react-flow__edge-path { stroke-width: 3.25; }
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #2dd4bf !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 5px rgba(45, 212, 191, 0.55));
+}
+.react-flow__edge.selectable:hover .react-flow__edge-interaction { stroke-width: 16; }
+
+.react-flow__connection-path { stroke: #2dd4bf; }
+
+.react-flow__controls {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #212d34;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+}
+.react-flow__controls button {
+  background: #10181c;
+  border-bottom: 1px solid #1b262c;
+  color: #94a3b8;
+  width: 30px;
+  height: 30px;
+}
+.react-flow__controls button:hover { background: #16222a; color: #5eead4; }
+.react-flow__controls button svg { fill: currentColor; }
+
+.react-flow__minimap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #212d34;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+}
+.react-flow__attribution { display: none; }
+
+.react-flow__nodesselection-rect,
+.react-flow__selection {
+  background: rgba(45, 212, 191, 0.06);
+  border: 1px dashed rgba(45, 212, 191, 0.4);
+}
+
+/* subtle circuit texture on the canvas pane */
+.react-flow__pane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 500px at 30% -10%, rgba(45, 212, 191, 0.05), transparent 60%),
+    radial-gradient(900px 420px at 85% 110%, rgba(56, 189, 248, 0.04), transparent 60%);
+}
+
+/* ── code tokens ────────────────────────────────────────────── */
+.tok-kw { color: #f472b6; }
+.tok-type { color: #7dd3fc; }
+.tok-st { color: #a7f3d0; }
+.tok-num { color: #fbbf24; }
+.tok-cm { color: #4b6472; font-style: italic; }
+.tok-pre { color: #c084fc; }
+.tok-fn { color: #5eead4; }
+.tok-const { color: #fdba74; }
+
+.code-comment-line { background: rgba(75, 100, 114, 0.06); }
+
+/* number input spinners off */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+/* select dropdown arrow color */
+select option { background: #10181c; color: #e2e8f0; }
