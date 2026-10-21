@@ -19,13 +19,26 @@
 
 :root {
   color-scheme: dark;
+  --bg: #0a0e10;
+  --panel: #0d1417;
+  --card: #121a1f;
+  --border: #2a363d;
+  --text: #cbd5e1;
+}
+html.light {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --card: #f1f5f9;
+  --border: #cbd5e1;
+  --text: #0f172a;
 }
 
 html, body, #root {
   height: 100%;
   margin: 0;
-  background: #0a0e10;
-  color: #cbd5e1;
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
@@ -46,7 +59,7 @@ html, body, #root {
 *::-webkit-scrollbar-thumb:hover { background: #2b3a43; }
 
 /* ── react flow chrome ──────────────────────────────────────── */
-.react-flow { background: #0a0e10; }
+.react-flow { background: var(--bg); }
 .react-flow__node { outline: none; }
 .react-flow__node:focus { outline: none; }
 

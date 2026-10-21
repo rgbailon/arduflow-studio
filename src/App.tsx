@@ -21,14 +21,14 @@ export default function App() {
 
   return (
     <ReactFlowProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-[#0a0e10] text-slate-200">
+      <div className="flex h-screen flex-col overflow-hidden bg-[var(--bg)] text-slate-200">
         <TopBar onFlash={() => setFlashOpen(true)} theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />
 
         <div className="relative flex min-h-0 flex-1">
           {/* left palette */}
           <aside
             className={cn(
-              'relative shrink-0 overflow-hidden border-r border-[#1a2328] bg-[#0c1215] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              'relative shrink-0 overflow-hidden border-r border-[var(--border)] bg-[var(--bg)] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
               paletteOpen ? 'w-[264px]' : 'w-0',
             )}
           >
@@ -38,7 +38,7 @@ export default function App() {
           </aside>
           <button
             onClick={() => setPaletteOpen((o) => !o)}
-            className="absolute left-0 top-1/2 z-30 flex h-14 w-5 -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 border-[#212d34] bg-[#0e1519] text-slate-500 transition-colors hover:text-teal-300"
+            className="absolute left-0 top-1/2 z-30 flex h-14 w-5 -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 border-[var(--border)] bg-[var(--bg)] text-slate-500 transition-colors hover:text-teal-300"
             style={{ left: paletteOpen ? 264 : 0 }}
             aria-label={paletteOpen ? 'Collapse palette' : 'Expand palette'}
           >
@@ -56,7 +56,7 @@ export default function App() {
         </div>
 
         {/* status bar */}
-        <footer className="flex h-[26px] shrink-0 items-center gap-4 border-t border-[#1a2328] bg-[#0b1114] px-3.5 font-mono text-[9px] uppercase tracking-[0.18em] text-slate-600">
+        <footer className="flex h-[26px] shrink-0 items-center gap-4 border-t border-[var(--border)] bg-[var(--bg)] px-3.5 font-mono text-[9px] uppercase tracking-[0.18em] text-slate-600">
           <span className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
             ArduFlow Studio

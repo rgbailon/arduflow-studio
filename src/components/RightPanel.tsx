@@ -20,10 +20,10 @@ export function RightPanel({ width }: { width: number }) {
 
   return (
     <div
-      className="flex h-full flex-col overflow-hidden border-l border-[#1a2328] bg-[#0d1316]"
+      className="flex h-full flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--bg)]"
       style={{ width }}
     >
-      <div className="flex shrink-0 items-center border-b border-[#1a2328] bg-[#0c1215] px-1.5 py-1.5">
+      <div className="flex shrink-0 items-center border-b border-[var(--border)] bg-[var(--bg)] px-1.5 py-1.5">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -31,7 +31,7 @@ export function RightPanel({ width }: { width: number }) {
             className={cn(
               'relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[10.5px] font-bold transition-all',
               rightTab === t.id
-                ? 'bg-[#16232a] text-teal-200 shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]'
+                ? 'bg-[var(--panel)] text-teal-200 shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]'
                 : 'text-slate-500 hover:text-slate-300',
             )}
           >

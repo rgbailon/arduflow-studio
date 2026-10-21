@@ -26,8 +26,8 @@ export function CodePanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-[#1d272d] px-3.5 py-2">
-        <span className="rounded border border-[#2a363d] bg-[#141c21] px-1.5 py-0.5 font-mono text-[9.5px] text-teal-300">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3.5 py-2">
+        <span className="rounded border border-[var(--border)] bg-[var(--panel)] px-1.5 py-0.5 font-mono text-[9.5px] text-teal-300">
           {slug}.ino
         </span>
         {errors.length > 0 && (
@@ -47,7 +47,7 @@ export function CodePanel() {
               setCopied(true);
               setTimeout(() => setCopied(false), 1400);
             }}
-            className="flex h-6.5 items-center gap-1 rounded-md border border-[#2a363d] bg-[#121a1f] px-2 text-[10px] font-semibold text-slate-300 transition-colors hover:border-teal-400/50 hover:text-teal-200"
+            className="flex h-6.5 items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--panel)] px-2 text-[10px] font-semibold text-slate-300 transition-colors hover:border-teal-400/50 hover:text-teal-200"
           >
             {copied ? <Check size={11} /> : <Copy size={11} />}
             {copied ? 'Copied' : 'Copy'}
@@ -66,7 +66,7 @@ export function CodePanel() {
       </div>
 
       {errors.length + warns.length > 0 && (
-        <div className="max-h-20 space-y-0.5 overflow-y-auto border-b border-[#1d272d] bg-[#0c1215] px-3.5 py-2">
+        <div className="max-h-20 space-y-0.5 overflow-y-auto border-b border-[var(--border)] bg-[var(--bg)] px-3.5 py-2">
           {[...errors, ...warns].slice(0, 4).map((p, i) => (
             <p key={i} className={p.kind === 'error' ? 'text-[10px] text-rose-300/90' : 'text-[10px] text-amber-300/90'}>
               {p.kind === 'error' ? '»' : '∆'} {p.msg}
@@ -75,7 +75,7 @@ export function CodePanel() {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto bg-[#0a1013]">
+      <div className="flex-1 overflow-auto bg-[var(--bg)]">
         <pre className="min-w-max px-0 py-3 font-mono text-[11.5px] leading-[1.65]">
           {lines.map((l, i) => (
             <div key={i} className={`flex ${l.trim().startsWith('//') ? 'code-comment-line' : ''}`}>
@@ -90,7 +90,7 @@ export function CodePanel() {
         </pre>
       </div>
 
-      <div className="flex items-center gap-3 border-t border-[#1d272d] px-3.5 py-1.5 font-mono text-[9px] uppercase tracking-widest text-slate-600">
+      <div className="flex items-center gap-3 border-t border-[var(--border)] px-3.5 py-1.5 font-mono text-[9px] uppercase tracking-widest text-slate-600">
         <span>{lines.length} lines</span>
         <span>{board.fqbn}</span>
         <span className="ml-auto text-teal-500/70">live · updates as you wire</span>

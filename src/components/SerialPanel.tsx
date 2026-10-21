@@ -58,18 +58,18 @@ export function SerialPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-[#1d272d] px-3.5 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3.5 py-2">
         <span className="flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-widest text-slate-500">
           <Radio size={11} className={simRunning ? 'text-teal-400' : 'text-slate-600'} />
           {simRunning ? 'live simulation' : 'idle'}
         </span>
-        <span className="rounded border border-[#2a363d] bg-[#141c21] px-1.5 py-0.5 font-mono text-[9px] text-slate-400">
+        <span className="rounded border border-[var(--border)] bg-[var(--panel)] px-1.5 py-0.5 font-mono text-[9px] text-slate-400">
           9600 baud
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <button
             onClick={() => setLines([])}
-            className="flex h-6.5 w-6.5 items-center justify-center rounded-md border border-[#2a363d] bg-[#121a1f] text-slate-400 transition-colors hover:text-rose-300"
+            className="flex h-6.5 w-6.5 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--panel)] text-slate-400 transition-colors hover:text-rose-300"
             aria-label="Clear"
           >
             <Eraser size={12} />
@@ -89,10 +89,10 @@ export function SerialPanel() {
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[#070c0f] px-3.5 py-3 font-mono text-[11px] leading-[1.75]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[var(--bg)] px-3.5 py-3 font-mono text-[11px] leading-[1.75]">
         {lines.length === 0 && !simRunning && (
           <div className="flex h-full flex-col items-center justify-center gap-2.5 text-center">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#26323a] bg-[#10181c] text-slate-600">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--panel)] text-slate-600">
               <TerminalSquare size={18} />
             </span>
             {channels.length === 0 ? (
@@ -116,7 +116,7 @@ export function SerialPanel() {
         {simRunning && <p className="animate-pulse text-teal-500">▍</p>}
       </div>
 
-      <div className="border-t border-[#1d272d] px-3.5 py-1.5 font-mono text-[9px] uppercase tracking-widest text-slate-600">
+      <div className="border-t border-[var(--border)] px-3.5 py-1.5 font-mono text-[9px] uppercase tracking-widest text-slate-600">
         {channels.length} signal source{channels.length === 1 ? '' : 's'} · software simulation
       </div>
     </div>

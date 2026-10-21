@@ -21,7 +21,7 @@ export function Palette() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="border-b border-[#1d272d] px-4 pb-3 pt-4">
+      <div className="border-b border-[var(--border)] px-4 pb-3 pt-4">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Components</h2>
         <p className="mt-1 text-[10.5px] leading-relaxed text-slate-600">
           Drag onto the canvas, or press <span className="text-slate-400">+</span> to place.
@@ -36,13 +36,13 @@ export function Palette() {
             <div key={cat} className="mb-1.5">
               <button
                 onClick={() => setOpen((o) => ({ ...o, [cat]: !o[cat] }))}
-                className="group flex w-full items-center gap-2 rounded-md px-1.5 py-2 text-left hover:bg-[#141c21]"
+                className="group flex w-full items-center gap-2 rounded-md px-1.5 py-2 text-left hover:bg-[var(--panel)]"
               >
                 <span className="h-[7px] w-[7px] rounded-full" style={{ background: CAT_ACCENT[cat] }} />
                 <span className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-slate-400 group-hover:text-slate-300">
                   {cat}
                 </span>
-                <span className="ml-auto rounded bg-[#182127] px-1.5 font-mono text-[9px] text-slate-500">
+                <span className="ml-auto rounded bg-[var(--panel)] px-1.5 font-mono text-[9px] text-slate-500">
                   {items.length}
                 </span>
                 <ChevronDown
@@ -62,7 +62,7 @@ export function Palette() {
                     }}
                     onDoubleClick={() => addComponent(c.type)}
                     title={c.desc}
-                    className="group relative flex cursor-grab items-center gap-2.5 rounded-lg border border-[#212c33] bg-[#10171b] px-2.5 py-2 transition-all hover:border-teal-400/40 hover:bg-[#131d22] active:cursor-grabbing"
+                    className="group relative flex cursor-grab items-center gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 py-2 transition-all hover:border-teal-400/40 hover:bg-[var(--panel)] active:cursor-grabbing"
                   >
                     <div className="flex h-9 w-12 shrink-0 items-center justify-center">
                       <PartVisual type={c.type} />
@@ -76,7 +76,7 @@ export function Palette() {
                         e.stopPropagation();
                         addComponent(c.type);
                       }}
-                      className="ml-auto flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-md border border-[#2b3840] bg-[#162027] text-slate-500 opacity-0 transition-all hover:border-teal-400/50 hover:text-teal-300 group-hover:opacity-100"
+                      className="ml-auto flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--panel)] text-slate-500 opacity-0 transition-all hover:border-teal-400/50 hover:text-teal-300 group-hover:opacity-100"
                       aria-label={`Add ${c.name}`}
                     >
                       <Plus size={12} />
@@ -89,8 +89,8 @@ export function Palette() {
         })}
       </div>
 
-      <div className="border-t border-[#1d272d] p-3">
-        <div className="rounded-lg border border-[#22303a] bg-gradient-to-br from-[#101a1e] to-[#0d1518] p-3">
+      <div className="border-t border-[var(--border)] p-3">
+        <div className="rounded-lg border border-[var(--border)] bg-gradient-to-br from-[#101a1e] to-[#0d1518] p-3">
           <p className="font-mono text-[9.5px] uppercase tracking-widest text-teal-400/90">Serial wire colors</p>
           <div className="mt-1.5 grid grid-cols-3 gap-x-2 gap-y-1">
             {[

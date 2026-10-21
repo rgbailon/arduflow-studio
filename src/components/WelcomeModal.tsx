@@ -29,11 +29,11 @@ export function WelcomeModal() {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
-      <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[#26323a] bg-[#0d1417] shadow-2xl animate-rise">
-        <div className="relative border-b border-[#1d272d] bg-gradient-to-br from-teal-500/12 via-transparent to-transparent px-7 pb-6 pt-7">
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-2xl animate-rise">
+        <div className="relative border-b border-[var(--border)] bg-gradient-to-br from-teal-500/12 via-transparent to-transparent px-7 pb-6 pt-7">
           <button
             onClick={() => setWelcomeOpen(false)}
-            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-lg border border-[#2a363d] text-slate-500 transition-colors hover:text-slate-200"
+            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border)] text-slate-500 transition-colors hover:text-slate-200"
             aria-label="Close"
           >
             <X size={14} />
@@ -50,7 +50,7 @@ export function WelcomeModal() {
 
         <div className="grid gap-2.5 px-7 py-5 sm:grid-cols-3">
           {STEPS.map((s, i) => (
-            <div key={i} className="rounded-xl border border-[#222d34] bg-[#10181c] p-3.5">
+            <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--panel)] p-3.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-teal-400/30 bg-teal-400/10 text-teal-300">
                 {s.icon}
               </span>
@@ -60,7 +60,7 @@ export function WelcomeModal() {
           ))}
         </div>
 
-        <div className="border-t border-[#1d272d] px-7 py-5">
+        <div className="border-t border-[var(--border)] px-7 py-5">
           <p className="mb-2.5 flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.22em] text-slate-500">
             <Rocket size={11} className="text-teal-400" /> Start from a template
           </p>
@@ -72,7 +72,7 @@ export function WelcomeModal() {
                   loadTemplate(t.id);
                   setWelcomeOpen(false);
                 }}
-                className="group flex items-center gap-2.5 rounded-lg border border-[#222d34] bg-[#10181c] px-3 py-2.5 text-left transition-all hover:border-teal-400/40 hover:bg-[#13202661]"
+                className="group flex items-center gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2.5 text-left transition-all hover:border-teal-400/40 hover:bg-[#13202661]"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12px] font-bold text-slate-200 group-hover:text-teal-200">
@@ -80,7 +80,7 @@ export function WelcomeModal() {
                   </span>
                   <span className="block truncate text-[9.5px] text-slate-600">{t.tagline}</span>
                 </span>
-                <span className="rounded border border-[#2a363d] px-1.5 py-px font-mono text-[8.5px] uppercase text-teal-300/70">
+                <span className="rounded border border-[var(--border)] px-1.5 py-px font-mono text-[8.5px] uppercase text-teal-300/70">
                   {t.badge}
                 </span>
                 <ArrowRight size={12} className="text-slate-600 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-300" />

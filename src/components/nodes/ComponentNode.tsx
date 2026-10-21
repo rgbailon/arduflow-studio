@@ -50,15 +50,15 @@ function ComponentNodeInner({ id, data, selected }: NodeProps) {
   return (
     <div
       className={cn(
-        'node-card group relative select-none rounded-xl border bg-[#11181c]/95 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.9)] backdrop-blur transition-shadow duration-200',
+        'node-card group relative select-none rounded-xl border bg-[var(--panel)]/95 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.9)] backdrop-blur transition-shadow duration-200',
         selected
           ? 'border-teal-400/80 shadow-[0_0_0_3px_rgba(45,212,191,0.18),0_10px_34px_-10px_rgba(45,212,191,0.25)]'
-          : 'border-[#2a363d] hover:border-[#3b4a53]',
+          : 'border-[var(--border)] hover:border-[var(--border)]',
       )}
       style={{ width: def.width }}
     >
       {/* header */}
-      <div className="flex items-center gap-1.5 border-b border-[#232e34] px-2.5 py-1.5">
+      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-2.5 py-1.5">
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: CAT_COLOR[def.category] }} />
         <span className="truncate font-mono text-[11px] font-semibold tracking-wide text-slate-200">
           {label}

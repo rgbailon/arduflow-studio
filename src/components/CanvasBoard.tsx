@@ -74,14 +74,14 @@ export function CanvasBoard() {
         connectionLineStyle={{ stroke: '#2dd4bf', strokeWidth: 2, strokeDasharray: '6 4' }}
         selectionOnDrag={false}
         panOnDrag={[0, 1, 2]}
-        className="bg-[#0a0e10]"
+        className="bg-[var(--bg)]"
       >
         <Background
           variant={BackgroundVariant.Dots}
           gap={26}
           size={1.6}
           color="#1c262c"
-          className="bg-[#0a0e10]"
+          className="bg-[var(--bg)]"
         />
         <Controls
           position="bottom-left"
@@ -101,7 +101,7 @@ export function CanvasBoard() {
 
       {isEmpty && (
         <div className="pointer-events-none absolute inset-x-0 top-6 z-10 flex justify-center">
-          <div className="animate-rise rounded-xl border border-[#24333a] bg-[#0e1518]/92 px-5 py-3.5 shadow-2xl backdrop-blur">
+          <div className="animate-rise rounded-xl border border-[var(--border)] bg-[var(--bg)]/92 px-5 py-3.5 shadow-2xl backdrop-blur">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-teal-400/30 bg-teal-400/10 text-teal-300">
                 <MousePointerClick size={17} />
@@ -112,7 +112,7 @@ export function CanvasBoard() {
                 </p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
                   then pull a wire from a pin dot <MoveRight size={11} /> to the board — or press{' '}
-                  <span className="rounded border border-[#2d3b42] bg-[#182026] px-1 py-px font-mono text-[10px] text-teal-300">Auto-wire</span>
+                  <span className="rounded border border-[var(--border)] bg-[var(--panel)] px-1 py-px font-mono text-[10px] text-teal-300">Auto-wire</span>
                 </p>
               </div>
             </div>

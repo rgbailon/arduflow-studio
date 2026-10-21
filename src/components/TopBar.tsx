@@ -60,7 +60,7 @@ function Menu({
           'flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11.5px] font-semibold transition-all',
           open
             ? 'border-teal-400/50 bg-teal-400/10 text-teal-200'
-            : 'border-[#2a363d] bg-[#121a1f] text-slate-300 hover:border-[#3b4a53] hover:text-slate-100',
+            : 'border-[var(--border)] bg-[var(--panel)] text-slate-300 hover:border-[var(--border)] hover:text-slate-100',
         )}
       >
         {icon}
@@ -70,7 +70,7 @@ function Menu({
       {open && (
         <div
           className={cn(
-            'absolute top-9 z-50 min-w-56 overflow-hidden rounded-xl border border-[#26323a] bg-[#0e1518] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)] animate-rise',
+            'absolute top-9 z-50 min-w-56 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg)] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)] animate-rise',
             align === 'right' ? 'right-0' : 'left-0',
           )}
         >
@@ -81,12 +81,12 @@ function Menu({
                 it.onClick();
                 setOpen(false);
               }}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-[#152026]"
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-[var(--panel)]"
             >
               {it.icon && <span className="text-slate-500">{it.icon}</span>}
               <span className="text-[12px] font-medium text-slate-200">{it.label}</span>
               {it.sub && (
-                <span className="ml-auto rounded border border-[#2a363d] px-1.5 py-px font-mono text-[9px] text-teal-300/80">
+                <span className="ml-auto rounded border border-[var(--border)] px-1.5 py-px font-mono text-[9px] text-teal-300/80">
                   {it.sub}
                 </span>
               )}
@@ -155,7 +155,7 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
 
   return (
     <>
-    <header className="flex h-[54px] shrink-0 items-center gap-2.5 border-b border-[#1a2328] bg-[#0d1417]/95 px-3.5 backdrop-blur">
+    <header className="flex h-[54px] shrink-0 items-center gap-2.5 border-b border-[var(--border)] bg-[var(--bg)]/95 px-3.5 backdrop-blur">
       <div className="flex items-center gap-2.5 pr-1">
         <Logo />
         <div className="leading-none">
@@ -168,13 +168,13 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
         </div>
       </div>
 
-      <div className="mx-1 h-6 w-px bg-[#1f2a30]" />
+      <div className="mx-1 h-6 w-px bg-[var(--panel)]" />
 
       <input
         value={projectName}
         onChange={(e) => setProjectName(e.target.value)}
         spellCheck={false}
-        className="h-8 w-40 rounded-lg border border-transparent bg-transparent px-2 text-[12.5px] font-semibold text-slate-200 outline-none transition-colors hover:border-[#2a363d] focus:border-teal-400/60 focus:bg-[#10181c] md:w-52"
+        className="h-8 w-40 rounded-lg border border-transparent bg-transparent px-2 text-[12.5px] font-semibold text-slate-200 outline-none transition-colors hover:border-[var(--border)] focus:border-teal-400/60 focus:bg-[var(--panel)] md:w-52"
         aria-label="Project name"
       />
 
@@ -182,11 +182,11 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
         <select
           value={boardId}
           onChange={(e) => setBoard(e.target.value)}
-          className="h-8 appearance-none rounded-lg border border-[#2a363d] bg-[#121a1f] pl-2.5 pr-7 text-[11.5px] font-semibold text-slate-200 outline-none transition-colors hover:border-[#3b4a53] focus:border-teal-400/60"
+          className="h-8 appearance-none rounded-lg border border-[var(--border)] bg-[var(--panel)] pl-2.5 pr-7 text-[11.5px] font-semibold text-slate-200 outline-none transition-colors hover:border-[var(--border)] focus:border-teal-400/60"
           aria-label="Board"
         >
           {BOARDS.map((b) => (
-            <option key={b.id} value={b.id} className="bg-[#121a1f]">
+            <option key={b.id} value={b.id} className="bg-[var(--panel)]">
               {b.name}
             </option>
           ))}
@@ -240,7 +240,7 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
         <ClearButton />
         <button
           onClick={onToggleTheme}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a363d] bg-[#121a1f] text-slate-400 transition-colors hover:border-[#3b4a53] hover:text-slate-100"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--panel)] text-slate-400 transition-colors hover:border-[var(--border)] hover:text-slate-100"
           aria-label="Toggle theme"
           title="Toggle light/dark UI"
         >
@@ -248,7 +248,7 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
         </button>
         <button
           onClick={() => setWelcomeOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a363d] bg-[#121a1f] text-slate-400 transition-colors hover:border-[#3b4a53] hover:text-slate-100"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--panel)] text-slate-400 transition-colors hover:border-[var(--border)] hover:text-slate-100"
           aria-label="Help"
         >
           <CircleHelp size={14} />
@@ -277,10 +277,10 @@ export function FlashModal({ open, onClose }: { open: boolean; onClose: () => vo
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-2xl border border-[#26323a] bg-[#0e1518] shadow-2xl animate-rise"
+        className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-2xl animate-rise"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 border-b border-[#202b32] px-5 py-4">
+        <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-5 py-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-400/40 bg-amber-400/10 text-amber-300">
             <Zap size={15} />
           </span>
@@ -295,7 +295,7 @@ export function FlashModal({ open, onClose }: { open: boolean; onClose: () => vo
             <li className="flex gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal-400" /> Install <b className="text-slate-200">arduino-cli</b> (free & open source)</li>
             <li className="flex gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal-400" /> Plug in your board and run:</li>
           </ol>
-          <pre className="overflow-x-auto rounded-lg border border-[#202b32] bg-[#090e11] p-3.5 font-mono text-[11px] leading-relaxed text-teal-100/90">
+          <pre className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3.5 font-mono text-[11px] leading-relaxed text-teal-100/90">
             {cmd}
           </pre>
           <div className="flex items-center gap-2">
@@ -312,7 +312,7 @@ export function FlashModal({ open, onClose }: { open: boolean; onClose: () => vo
             </button>
             <button
               onClick={onClose}
-              className="ml-auto h-8 rounded-lg border border-[#2a363d] bg-[#121a1f] px-3 text-[11.5px] font-semibold text-slate-300 hover:text-slate-100"
+              className="ml-auto h-8 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 text-[11.5px] font-semibold text-slate-300 hover:text-slate-100"
             >
               Close
             </button>
@@ -393,8 +393,8 @@ Pin ids:
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-2xl border border-[#26323a] bg-[#0e1518] shadow-2xl animate-rise" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2.5 border-b border-[#202b32] px-5 py-4">
+      <div className="w-full max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-2xl animate-rise" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-5 py-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-400/40 bg-violet-400/10 text-violet-300">
             <Sparkles size={15} />
           </span>
@@ -409,14 +409,14 @@ Pin ids:
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}
             placeholder="e.g. Blink an LED on pin 13, read a potentiometer, show value on LCD"
-            className="w-full rounded-lg border border-[#2a363d] bg-[#090e11] p-3 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
           />
           <input
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             type="password"
             placeholder="OpenAI API key (stored locally)"
-            className="w-full rounded-lg border border-[#2a363d] bg-[#090e11] px-3 py-2 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
           />
           {status && <p className="font-mono text-[10px] text-slate-400">{status}</p>}
           <div className="flex items-center gap-2">
@@ -429,7 +429,7 @@ Pin ids:
             </button>
             <button
               onClick={onClose}
-              className="ml-auto h-8 rounded-lg border border-[#2a363d] bg-[#121a1f] px-3 text-[11.5px] font-semibold text-slate-300 hover:text-slate-100"
+              className="ml-auto h-8 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 text-[11.5px] font-semibold text-slate-300 hover:text-slate-100"
             >
               Close
             </button>
@@ -447,7 +447,7 @@ export function ClearButton() {
       onClick={() => {
         if (confirm('Clear the whole canvas?')) clearProject();
       }}
-      className="flex h-8 items-center gap-1.5 rounded-lg border border-[#2a363d] bg-[#121a1f] px-2.5 text-[11.5px] font-semibold text-slate-400 transition-colors hover:border-rose-400/50 hover:text-rose-300"
+      className="flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 text-[11.5px] font-semibold text-slate-400 transition-colors hover:border-rose-400/50 hover:text-rose-300"
       title="Clear canvas"
     >
       <Trash2 size={13} />

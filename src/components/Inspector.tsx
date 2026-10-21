@@ -26,7 +26,7 @@ export function Inspector() {
   if (!node) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#26323a] bg-[#10181c] text-slate-600">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--panel)] text-slate-600">
           <CircuitBoard size={20} />
         </span>
         <p className="text-[12.5px] font-semibold text-slate-400">Nothing selected</p>
@@ -66,13 +66,13 @@ export function Inspector() {
           {[
             ['Digital', digital], ['PWM', pwm], ['Analog', analog],
           ].map(([l, v]) => (
-            <div key={l} className="rounded-lg border border-[#222d34] bg-[#10171b] px-2.5 py-2 text-center">
+            <div key={l} className="rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 py-2 text-center">
               <p className="font-mono text-[16px] font-bold text-teal-300">{v}</p>
               <p className="mt-0.5 text-[9px] uppercase tracking-widest text-slate-600">{l} pins</p>
             </div>
           ))}
         </div>
-        <div className="rounded-lg border border-[#222d34] bg-[#10171b] p-3">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3">
           <p className="font-mono text-[9.5px] uppercase tracking-widest text-slate-500">Pin usage</p>
           <div className="mt-2 flex flex-wrap gap-1">
             {freeUsed.map((p) => (
@@ -82,7 +82,7 @@ export function Inspector() {
                   'rounded px-1.5 py-0.5 font-mono text-[9px]',
                   p.used
                     ? 'bg-teal-400/15 text-teal-300 line-through decoration-teal-400/50'
-                    : 'bg-[#182127] text-slate-400',
+                    : 'bg-[var(--panel)] text-slate-400',
                 )}
                 title={p.used ? `${p.id} in use` : `${p.id} free`}
               >
@@ -91,7 +91,7 @@ export function Inspector() {
             ))}
           </div>
         </div>
-        <div className="rounded-lg border border-[#222d34] bg-[#10171b] p-3 font-mono text-[10px] leading-relaxed text-slate-500">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3 font-mono text-[10px] leading-relaxed text-slate-500">
           <p className="text-slate-400">compile target</p>
           <p className="text-teal-300/90">{board.fqbn}</p>
           <p className="mt-2 text-slate-400">library deps</p>
@@ -123,7 +123,7 @@ export function Inspector() {
           value={label}
           onChange={(e) => renameNode(node.id, e.target.value)}
           spellCheck={false}
-          className="h-8 w-full rounded-lg border border-[#2a363d] bg-[#10181c] px-2.5 font-mono text-[12px] text-teal-200 outline-none focus:border-teal-400/60"
+          className="h-8 w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 font-mono text-[12px] text-teal-200 outline-none focus:border-teal-400/60"
         />
       </label>
 
@@ -135,10 +135,10 @@ export function Inspector() {
               <select
                 value={String(props[pf.key] ?? '')}
                 onChange={(e) => updateProps(node.id, { [pf.key]: e.target.value })}
-                className="h-8 w-full appearance-none rounded-lg border border-[#2a363d] bg-[#10181c] px-2.5 text-[12px] text-slate-200 outline-none focus:border-teal-400/60"
+                className="h-8 w-full appearance-none rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 text-[12px] text-slate-200 outline-none focus:border-teal-400/60"
               >
                 {pf.options?.map((o) => (
-                  <option key={o.value} value={o.value} className="bg-[#10181c]">{o.label}</option>
+                  <option key={o.value} value={o.value} className="bg-[var(--panel)]">{o.label}</option>
                 ))}
               </select>
             </div>
@@ -148,21 +148,21 @@ export function Inspector() {
               value={Number(props[pf.key] ?? 0)}
               min={pf.min} max={pf.max} step={pf.step}
               onChange={(e) => updateProps(node.id, { [pf.key]: Number(e.target.value) })}
-              className="h-8 w-full rounded-lg border border-[#2a363d] bg-[#10181c] px-2.5 font-mono text-[12px] text-slate-200 outline-none focus:border-teal-400/60"
+              className="h-8 w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 font-mono text-[12px] text-slate-200 outline-none focus:border-teal-400/60"
             />
           ) : (
             <input
               value={String(props[pf.key] ?? '')}
               maxLength={16}
               onChange={(e) => updateProps(node.id, { [pf.key]: e.target.value })}
-              className="h-8 w-full rounded-lg border border-[#2a363d] bg-[#10181c] px-2.5 text-[12px] text-slate-200 outline-none focus:border-teal-400/60"
+              className="h-8 w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-2.5 text-[12px] text-slate-200 outline-none focus:border-teal-400/60"
             />
           )}
         </label>
       ))}
 
-      <div className="rounded-lg border border-[#222d34] bg-[#10171b]">
-        <div className="flex items-center justify-between border-b border-[#1d272d] px-3 py-2">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
           <span className="font-mono text-[9.5px] uppercase tracking-widest text-slate-400">Pin wiring</span>
           {unwired > 0 ? (
             <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-amber-400">
@@ -182,7 +182,7 @@ export function Inspector() {
                 {p.requiresPwm && (
                   <span className="rounded bg-orange-400/10 px-1 font-mono text-[8px] uppercase text-orange-300">pwm</span>
                 )}
-                <span className="mx-1 h-px flex-1 border-t border-dashed border-[#2a363d]" />
+                <span className="mx-1 h-px flex-1 border-t border-dashed border-[var(--border)]" />
                 {bp ? (
                   <span className="font-mono text-[10px] text-teal-300">
                     {via.length > 0 && <span className="text-slate-500">{via.join(' → ')} → </span>}
@@ -212,7 +212,7 @@ export function Inspector() {
         Remove {label}
       </button>
 
-      <div className="rounded-lg border border-[#222d34] bg-[#10171b] p-3 text-[10px] leading-relaxed text-slate-600">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3 text-[10px] leading-relaxed text-slate-600">
         <Cpu size={11} className="mb-1 text-slate-500" />
         Parts are priced in the BOM tab · wires validate voltage, PWM and bus rules in real time.
       </div>

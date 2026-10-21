@@ -26,7 +26,7 @@ export function Toasts() {
           key={t.id}
           onClick={() => dismiss(t.id)}
           className={cn(
-            'pointer-events-auto flex max-w-md items-center gap-2 rounded-xl border bg-[#0e1518]/95 px-3.5 py-2.5 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.9)] backdrop-blur animate-toast',
+            'pointer-events-auto flex max-w-md items-center gap-2 rounded-xl border bg-[var(--bg)]/95 px-3.5 py-2.5 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.9)] backdrop-blur animate-toast',
             BORDER[t.kind],
           )}
         >
