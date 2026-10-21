@@ -20,8 +20,17 @@ export function PartVisual({
     case 'oled': return <Oled />;
     case 'buzzer': return <Buzzer />;
     case 'motor': return <Motor />;
-    default: return null;
+    default: return <Generic label={type} />;
   }
+}
+
+function Generic({ label }: { label: string }) {
+  return (
+    <svg viewBox="0 0 120 60" className="h-full w-auto" role="img" aria-label={label}>
+      <rect x="4" y="8" width="112" height="44" rx="8" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 3" />
+      <text x="60" y="34" textAnchor="middle" fontSize="11" fill="#94a3b8" fontFamily="monospace">{label}</text>
+    </svg>
+  );
 }
 
 const legStroke = '#8b98a9';
