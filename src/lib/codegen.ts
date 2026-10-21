@@ -71,7 +71,7 @@ export function resolvePins(
       // note passive parts on this net
       for (const m of nodes) {
         const md = getComponent((m.data as { compType?: string }).compType ?? '');
-        if (md?.passive && d.find(`${m.id}:${md.pins[0].id}`) === root)
+        if (md?.passive && md.pins.length && d.find(`${m.id}:${md.pins[0].id}`) === root)
           via[pin.id].push(m.id);
       }
     }
