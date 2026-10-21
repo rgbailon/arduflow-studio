@@ -323,6 +323,84 @@ const GENS: Record<string, Gen> = {
     s.loop.push(`// read ${c.comment}`, `${c.name}Sensors.requestTemperatures();`, `float ${c.name}T = ${c.name}Sensors.getTempCByIndex(0);`, `Serial.print("${c.name}: ");`, `Serial.print(${c.name}T);`, `Serial.println(" C");`, `delay(1000);`);
     return s;
   },
+
+  pir: (c) => {
+    const s = blank();
+    const p = c.pin('out');
+    if (!p) { s.missing.push(c.comment + ': OUT is not wired'); return s; }
+    s.defines.push('const int ' + c.U + '_PIN = ' + p + ';');
+    s.setup.push('pinMode(' + c.U + '_PIN, INPUT);');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'if (digitalRead(' + c.U + '_PIN) == HIGH) {', '  Serial.println("' + c.name + ': motion");', '  delay(500);', '}');
+    return s;
+  },
+  ldr: (c) => {
+    const s = blank();
+    const p = c.pin('out');
+    if (!p) { s.missing.push(c.comment + ': OUT is not wired'); return s; }
+    s.defines.push('const int ' + c.U + '_PIN = ' + p + ';');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'int ' + c.name + 'Raw = analogRead(' + c.U + '_PIN);', 'Serial.print("' + c.name + ': ");', 'Serial.println(' + c.name + 'Raw);', 'delay(200);');
+    return s;
+  },
+  tmp36: (c) => {
+    const s = blank();
+    const p = c.pin('out');
+    if (!p) { s.missing.push(c.comment + ': OUT is not wired'); return s; }
+    s.defines.push('const int ' + c.U + '_PIN = ' + p + ';');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'int ' + c.name + 'Raw = analogRead(' + c.U + '_PIN);', 'float ' + c.name + 'V = ' + c.name + 'Raw * 5.0 / 1023.0;', 'float ' + c.name + 'C = (' + c.name + 'V - 0.5) * 100.0;', 'Serial.print("' + c.name + ': ");', 'Serial.print(' + c.name + 'C);', 'Serial.println(" C");', 'delay(500);');
+    return s;
+  },
+  flame: (c) => {
+    const s = blank();
+    const d = c.pin('do'); const a = c.pin('ao');
+    if (!d && !a) { s.missing.push(c.comment + ': DO or AO must be wired'); return s; }
+    if (d) { s.defines.push('const int ' + c.U + '_DO = ' + d + ';'); s.setup.push('pinMode(' + c.U + '_DO, INPUT);'); }
+    if (a) { s.defines.push('const int ' + c.U + '_AO = ' + a + ';'); }
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, (d ? 'if (digitalRead(' + c.U + '_DO) == LOW) Serial.println("' + c.name + ': flame detected");' : ''), (a ? 'Serial.print("' + c.name + ' analog: "); Serial.println(analogRead(' + c.U + '_AO));' : ''), 'delay(300);');
+    return s;
+  },
+  soil: (c) => {
+    const s = blank();
+    const p = c.pin('ao');
+    if (!p) { s.missing.push(c.comment + ': AO is not wired'); return s; }
+    s.defines.push('const int ' + c.U + '_PIN = ' + p + ';');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'Serial.print("' + c.name + ': ");', 'Serial.println(analogRead(' + c.U + '_PIN));', 'delay(500);');
+    return s;
+  },
+  mq2: (c) => {
+    const s = blank();
+    const p = c.pin('ao');
+    if (!p) { s.missing.push(c.comment + ': AO is not wired'); return s; }
+    s.defines.push('const int ' + c.U + '_PIN = ' + p + ';');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'Serial.print("' + c.name + ': ");', 'Serial.println(analogRead(' + c.U + '_PIN));', 'delay(500);');
+    return s;
+  },
+  sound: (c) => {
+    const s = blank();
+    const a = c.pin('ao'); const d = c.pin('do');
+    if (!a && !d) { s.missing.push(c.comment + ': AO or DO must be wired'); return s; }
+    if (a) s.defines.push('const int ' + c.U + '_AO = ' + a + ';');
+    if (d) { s.defines.push('const int ' + c.U + '_DO = ' + d + ';'); s.setup.push('pinMode(' + c.U + '_DO, INPUT);'); }
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, (a ? 'Serial.print("' + c.name + ' analog: "); Serial.println(analogRead(' + c.U + '_AO));' : ''), (d ? 'if (digitalRead(' + c.U + '_DO) == HIGH) Serial.println("' + c.name + ': loud");' : ''), 'delay(200);');
+    return s;
+  },
+  rtc: (c) => {
+    const s = blank();
+    const sda = c.pin('sda'); const scl = c.pin('scl');
+    if (!sda || !scl) { s.missing.push(c.comment + ': SDA and SCL must be wired'); return s; }
+    s.includes.push('#include <Wire.h>', '#include <RTClib.h>');
+    s.globals.push('RTC_DS3231 ' + c.name + 'rtc;');
+    s.setup.push('if (!' + c.name + 'rtc.begin()) Serial.println("' + c.name + ' not found");');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'DateTime ' + c.name + 'now = ' + c.name + 'rtc.now();', 'Serial.print(' + c.name + 'now.timestamp());', 'Serial.println();', 'delay(1000);');
+    return s;
+  },
 };
 
 // ─── assembly ──────────────────────────────────────────────────────────
