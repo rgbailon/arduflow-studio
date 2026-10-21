@@ -401,6 +401,46 @@ const GENS: Record<string, Gen> = {
     s.loop.push('// read ' + c.comment, 'DateTime ' + c.name + 'now = ' + c.name + 'rtc.now();', 'Serial.print(' + c.name + 'now.timestamp());', 'Serial.println();', 'delay(1000);');
     return s;
   },
+
+  rgb: (c) => {
+    const s = blank();
+    const r = c.pin('r'); const g = c.pin('g'); const b = c.pin('b');
+    if (!r || !g || !b) { s.missing.push(c.comment + ': R, G, B must all be wired'); return s; }
+    s.defines.push('const int ' + c.U + '_R = ' + r + ';', 'const int ' + c.U + '_G = ' + g + ';', 'const int ' + c.U + '_B = ' + b + ';');
+    s.setup.push('pinMode(' + c.U + '_R, OUTPUT);', 'pinMode(' + c.U + '_G, OUTPUT);', 'pinMode(' + c.U + '_B, OUTPUT);');
+    s.loop.push('// color cycle ' + c.comment, 'analogWrite(' + c.U + '_R, 255); analogWrite(' + c.U + '_G, 0); analogWrite(' + c.U + '_B, 0); delay(500);', 'analogWrite(' + c.U + '_R, 0); analogWrite(' + c.U + '_G, 255); analogWrite(' + c.U + '_B, 0); delay(500);', 'analogWrite(' + c.U + '_R, 0); analogWrite(' + c.U + '_G, 0); analogWrite(' + c.U + '_B, 255); delay(500);');
+    return s;
+  },
+  stepper: (c) => {
+    const s = blank();
+    const i1 = c.pin('in1'); const i2 = c.pin('in2'); const i3 = c.pin('in3'); const i4 = c.pin('in4');
+    if (!i1 || !i2 || !i3 || !i4) { s.missing.push(c.comment + ': IN1-IN4 must all be wired'); return s; }
+    s.defines.push('const int ' + c.U + '_IN1 = ' + i1 + ';', 'const int ' + c.U + '_IN2 = ' + i2 + ';', 'const int ' + c.U + '_IN3 = ' + i3 + ';', 'const int ' + c.U + '_IN4 = ' + i4 + ';');
+    s.setup.push('pinMode(' + c.U + '_IN1, OUTPUT);', 'pinMode(' + c.U + '_IN2, OUTPUT);', 'pinMode(' + c.U + '_IN3, OUTPUT);', 'pinMode(' + c.U + '_IN4, OUTPUT);');
+    s.loop.push('// step ' + c.comment, 'digitalWrite(' + c.U + '_IN1, HIGH); delay(2); digitalWrite(' + c.U + '_IN1, LOW);', 'digitalWrite(' + c.U + '_IN2, HIGH); delay(2); digitalWrite(' + c.U + '_IN2, LOW);', 'digitalWrite(' + c.U + '_IN3, HIGH); delay(2); digitalWrite(' + c.U + '_IN3, LOW);', 'digitalWrite(' + c.U + '_IN4, HIGH); delay(2); digitalWrite(' + c.U + '_IN4, LOW);');
+    return s;
+  },
+  keypad: (c) => {
+    const s = blank();
+    const r1 = c.pin('r1'); const r2 = c.pin('r2'); const r3 = c.pin('r3'); const r4 = c.pin('r4');
+    const c1 = c.pin('c1'); const c2 = c.pin('c2'); const c3 = c.pin('c3'); const c4 = c.pin('c4');
+    if (!r1 || !r2 || !r3 || !r4 || !c1 || !c2 || !c3 || !c4) { s.missing.push(c.comment + ': all 8 pins must be wired'); return s; }
+    s.includes.push('#include <Keypad.h>');
+    s.defines.push('const byte ' + c.U + '_ROWS = 4;', 'const byte ' + c.U + '_COLS = 4;');
+    s.globals.push('char ' + c.name + 'Keys[4][4] = {{\'1\',\'2\',\'3\',\'A\'}, {\'4\',\'5\',\'6\',\'B\'}, {\'7\',\'8\',\'9\',\'C\'}, {\'*\',\'0\',\'#\',\'D\'}};', 'byte ' + c.name + 'RowPins[4] = {' + r1 + ',' + r2 + ',' + r3 + ',' + r4 + '};', 'byte ' + c.name + 'ColPins[4] = {' + c1 + ',' + c2 + ',' + c3 + ',' + c4 + '};', 'Keypad ' + c.name + ' = Keypad(makeKeymap(' + c.name + 'Keys), ' + c.name + 'RowPins, ' + c.name + 'ColPins, 4, 4);');
+    s.serial = true;
+    s.loop.push('// read ' + c.comment, 'char ' + c.name + 'Key = ' + c.name + '.getKey();', 'if (' + c.name + 'Key) { Serial.print("' + c.name + ': "); Serial.println(' + c.name + 'Key); }');
+    return s;
+  },
+  sevenseg: (c) => {
+    const s = blank();
+    const pins = ['a','b','c','d','e','f','g'].map((x) => c.pin(x));
+    if (pins.some((p) => !p)) { s.missing.push(c.comment + ': segments a-g must be wired'); return s; }
+    s.defines.push(...pins.map((p, i) => 'const int ' + c.U + '_' + 'abcdefg'[i].toUpperCase() + ' = ' + p + ';'));
+    for (const seg of 'ABCDEFG') s.setup.push('pinMode(' + c.U + '_' + seg + ', OUTPUT);');
+    s.loop.push('// count 0-9 on ' + c.comment, 'for (int n=0;n<10;n++){', '  // (segment map omitted for brevity)', '  delay(500);', '}');
+    return s;
+  },
 };
 
 // ─── assembly ──────────────────────────────────────────────────────────
