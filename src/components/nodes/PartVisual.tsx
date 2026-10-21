@@ -27,8 +27,16 @@ export function PartVisual({
 function Generic({ label }: { label: string }) {
   return (
     <svg viewBox="0 0 120 60" className="h-full w-auto" role="img" aria-label={label}>
-      <rect x="4" y="8" width="112" height="44" rx="8" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 3" />
-      <text x="60" y="34" textAnchor="middle" fontSize="11" fill="#94a3b8" fontFamily="monospace">{label}</text>
+      <rect x="8" y="12" width="104" height="36" rx="6" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+      <rect x="20" y="4" width="6" height="8" fill="#94a3b8" />
+      <rect x="40" y="4" width="6" height="8" fill="#94a3b8" />
+      <rect x="60" y="4" width="6" height="8" fill="#94a3b8" />
+      <rect x="80" y="4" width="6" height="8" fill="#94a3b8" />
+      <rect x="20" y="48" width="6" height="8" fill="#94a3b8" />
+      <rect x="40" y="48" width="6" height="8" fill="#94a3b8" />
+      <rect x="60" y="48" width="6" height="8" fill="#94a3b8" />
+      <rect x="80" y="48" width="6" height="8" fill="#94a3b8" />
+      <text x="60" y="34" textAnchor="middle" fontSize="10" fill="#e2e8f0" fontFamily="monospace">{label}</text>
     </svg>
   );
 }
