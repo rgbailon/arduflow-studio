@@ -17,7 +17,7 @@ export function Inspector() {
   const autoWire = useProject((s) => s.autoWire);
 
   const node = nodes.find((n) => n.id === selectedNodeId);
-  const board = getBoard(boardId);
+  const board = getBoard(boardId) ?? getBoard('uno')!;
   const resolved = useMemo(
     () => resolvePins(nodes, edges, board),
     [nodes, edges, board],

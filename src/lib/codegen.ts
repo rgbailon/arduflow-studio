@@ -51,7 +51,8 @@ export function resolvePins(
   const out: Record<string, PinAssignment> = {};
   for (const n of nodes) {
     if (n.type === 'board') continue;
-    const compType = (n.data as { compType?: string }).compType ?? '';
+    const data = (n.data ?? {}) as { compType?: string };
+    const compType = data.compType ?? '';
     const def = getComponent(compType);
     if (!def) continue;
     const map: Record<string, BoardPin | null> = {};
