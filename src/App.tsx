@@ -11,7 +11,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
         <div className="flex h-screen items-center justify-center bg-[var(--bg)] p-6 text-[var(--text)]">
           <div className="max-w-xl rounded-xl border border-red-500/40 bg-red-500/10 p-6">
             <h1 className="text-lg font-bold text-red-300">Something went wrong</h1>
-            <pre className="mt-3 whitespace-pre-wrap font-mono text-xs text-red-200">{this.state.error.message}</pre>
+            <pre className="mt-3 whitespace-pre-wrap font-mono text-xs text-red-200">{this.state.error.message}{'\n\n'}{this.state.error.stack}</pre>
           </div>
         </div>
       );
