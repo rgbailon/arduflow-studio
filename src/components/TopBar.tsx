@@ -111,7 +111,7 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
   const toast = useProject((s) => s.toast);
   const nodes = useProject((s) => s.nodes);
   const edges = useProject((s) => s.edges);
-  const board = getBoard(boardId);
+  const board = getBoard(boardId) ?? getBoard('uno')!;
 
   const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'sketch';
 
@@ -263,7 +263,7 @@ export function TopBar({ onFlash, theme = 'dark', onToggleTheme }: { onFlash: ()
 export function FlashModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const boardId = useProject((s) => s.boardId);
   const projectName = useProject((s) => s.projectName);
-  const board = getBoard(boardId);
+  const board = getBoard(boardId) ?? getBoard('uno')!;
   const [copied, setCopied] = useState(false);
   const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'sketch';
   const cmd = [

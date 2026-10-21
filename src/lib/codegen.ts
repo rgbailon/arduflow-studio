@@ -46,7 +46,7 @@ export function resolvePins(
   }
 
   const boardKeys = new Map<Key, BoardPin>();
-  for (const p of board.pins) boardKeys.set(`board:${p.id}`, p);
+  for (const p of board?.pins ?? []) boardKeys.set(`board:${p.id}`, p);
 
   const out: Record<string, PinAssignment> = {};
   for (const n of nodes) {
@@ -457,10 +457,12 @@ export function buildSketch(
   board: BoardDef,
   projectName: string,
 ): SketchResult {
+  if (!board) return { code: '', problems: [{ kind: 'error', msg: 'No board selected' }], serialUsed: false };
   const resolved = resolvePins(nodes, edges, board);
   const problems: { kind: 'warn' | 'error'; msg: string }[] = [];
   const sections: { name: string; sec: Section }[] = [];
-  const adcMax = board.id === 'esp32' ? 4095 : 1023;
+  const safeBoard = board ?? { id: 'uno', pins: [] } as BoardDef;
+  const adcMax = safeBoard.id === 'esp32' ? 4095 : 1023;
 
   for (const n of nodes) {
     if (n.type === 'board') continue;

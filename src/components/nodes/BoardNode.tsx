@@ -115,7 +115,7 @@ function BoardArt({ art, mcu }: { art: string; mcu: string }) {
 }
 
 function BoardNodeInner({ data, selected }: NodeProps) {
-  const board = getBoard(data.boardId as string);
+  const board = getBoard(data.boardId as string) ?? getBoard('uno')!;
   const left = board.pins.filter((p) => p.side === 'left');
   const right = board.pins.filter((p) => p.side === 'right');
 
