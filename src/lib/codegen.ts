@@ -1,0 +1,409 @@
+import type { Node, Edge } from '@xyflow/react';
+import type { BoardDef, BoardPin, ComponentDef } from './types';
+import { getComponent } from '../data/components';
+
+// ─── pin resolution (union-find through wires + passive parts) ─────────
+
+type Key = string; // `${nodeId}:${pinId}`
+
+class DSU {
+  p = new Map<Key, Key>();
+  find(x: Key): Key {
+    if (!this.p.has(x)) this.p.set(x, x);
+    const px = this.p.get(x)!;
+    if (px !== x) this.p.set(x, this.find(px));
+    return this.p.get(x)!;
+  }
+  union(a: Key, b: Key) {
+    this.p.set(this.find(a), this.find(b));
+  }
+}
+
+export interface PinAssignment {
+  /** component pin id -> resolved board pin (null when unwired) */
+  map: Record<string, BoardPin | null>;
+  /** true when the pin chain passes through a resistor */
+  via: Record<string, string[]>;
+}
+
+export function resolvePins(
+  nodes: Node[],
+  edges: Edge[],
+  board: BoardDef,
+): Record<string, PinAssignment> {
+  const d = new DSU();
+  for (const e of edges) {
+    if (e.source && e.target && e.sourceHandle && e.targetHandle)
+      d.union(`${e.source}:${e.sourceHandle}`, `${e.target}:${e.targetHandle}`);
+  }
+  // resistors connect their own legs internally
+  for (const n of nodes) {
+    const def = getComponent((n.data as { compType?: string }).compType ?? '');
+    if (def?.passive) {
+      for (let i = 0; i + 1 < def.pins.length; i++)
+        d.union(`${n.id}:${def.pins[i].id}`, `${n.id}:${def.pins[i + 1].id}`);
+    }
+  }
+
+  const boardKeys = new Map<Key, BoardPin>();
+  for (const p of board.pins) boardKeys.set(`board:${p.id}`, p);
+
+  const out: Record<string, PinAssignment> = {};
+  for (const n of nodes) {
+    if (n.type === 'board') continue;
+    const compType = (n.data as { compType?: string }).compType ?? '';
+    const def = getComponent(compType);
+    if (!def) continue;
+    const map: Record<string, BoardPin | null> = {};
+    const via: Record<string, string[]> = {};
+    for (const pin of def.pins) {
+      const root = d.find(`${n.id}:${pin.id}`);
+      let found: BoardPin | null = null;
+      for (const [k, bp] of boardKeys) {
+        if (d.find(k) === root) {
+          found = bp;
+          break;
+        }
+      }
+      map[pin.id] = found;
+      via[pin.id] = [];
+      // note passive parts on this net
+      for (const m of nodes) {
+        const md = getComponent((m.data as { compType?: string }).compType ?? '');
+        if (md?.passive && d.find(`${m.id}:${md.pins[0].id}`) === root)
+          via[pin.id].push(m.id);
+      }
+    }
+    out[n.id] = { map, via };
+  }
+  return out;
+}
+
+// ─── per-component sketch sections ─────────────────────────────────────
+
+interface Section {
+  includes: string[];
+  defines: string[];
+  globals: string[];
+  setup: string[];
+  loop: string[];
+  serial: boolean;
+  missing: string[];
+}
+
+const blank = (): Section => ({
+  includes: [], defines: [], globals: [], setup: [], loop: [], serial: false, missing: [],
+});
+
+const upper = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+
+interface GenCtx {
+  id: string;
+  name: string;         // sanitized instance var name, e.g. led1
+  U: string;            // UPPER name for constants
+  props: Record<string, string | number>;
+  pin: (pinId: string) => string | null;        // code label e.g. '13', 'A0'
+  wired: (pinId: string) => boolean;
+  comment: string;      // pretty comment header
+}
+
+type Gen = (c: GenCtx) => Section;
+
+const GENS: Record<string, Gen> = {
+  led: (c) => {
+    const s = blank();
+    const p = c.pin('anode');
+    if (!p) { s.missing.push(`${c.comment}: anode is not wired to a pin`); return s; }
+    const R = Math.max(25, Number(c.props.rate ?? 1000) / 2);
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.setup.push(`pinMode(${c.U}_PIN, OUTPUT);`);
+    s.loop.push(`// blink ${c.comment}`, `digitalWrite(${c.U}_PIN, HIGH);`, `delay(${R});`, `digitalWrite(${c.U}_PIN, LOW);`, `delay(${R});`);
+    return s;
+  },
+  resistor: () => blank(),
+  button: (c) => {
+    const s = blank();
+    const p = c.pin('p1');
+    if (!p) { s.missing.push(`${c.comment}: signal leg is not wired`); return s; }
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.setup.push(`pinMode(${c.U}_PIN, INPUT_PULLUP);`);
+    s.serial = true;
+    s.loop.push(`// read ${c.comment} (pressed = LOW with pull-up)`, `if (digitalRead(${c.U}_PIN) == LOW) {`, `  Serial.println("${c.name}: pressed");`, `  delay(180);  // debounce`, `}`);
+    return s;
+  },
+  pot: (c) => {
+    const s = blank();
+    const p = c.pin('out');
+    if (!p) { s.missing.push(`${c.comment}: OUT wiper is not wired to an analog pin`); return s; }
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.globals.push(`int ${c.name}Max = __ADC_MAX__;`);
+    s.serial = true;
+    s.loop.push(`// read ${c.comment}`, `int ${c.name}Raw = analogRead(${c.U}_PIN);`, `int ${c.name}Pct = map(${c.name}Raw, 0, ${c.name}Max, 0, 100);`, `Serial.print("${c.name}: ");`, `Serial.print(${c.name}Pct);`, `Serial.println("%");`);
+    return s;
+  },
+  servo: (c) => {
+    const s = blank();
+    const p = c.pin('sig');
+    if (!p) { s.missing.push(`${c.comment}: SIG is not wired to a PWM pin`); return s; }
+    const S = Number(c.props.speed ?? 15);
+    s.includes.push('#include <Servo.h>');
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.globals.push(`Servo ${c.name};`, `int ${c.name}Angle = 0;`, `int ${c.name}Step = 5;`);
+    s.setup.push(`${c.name}.attach(${c.U}_PIN);`, `${c.name}.write(0);`);
+    s.loop.push(`// sweep ${c.comment} 0 -> 180 -> 0`, `${c.name}Angle += ${c.name}Step;`, `if (${c.name}Angle >= 180 || ${c.name}Angle <= 0) ${c.name}Step = -${c.name}Step;`, `${c.name}.write(${c.name}Angle);`, `delay(${S});`);
+    return s;
+  },
+  ultrasonic: (c) => {
+    const s = blank();
+    const t = c.pin('trig'); const e = c.pin('echo');
+    if (!t || !e) { s.missing.push(`${c.comment}: TRIG and ECHO must both be wired`); return s; }
+    s.defines.push(`const int ${c.U}_TRIG = ${t};`, `const int ${c.U}_ECHO = ${e};`);
+    s.setup.push(`pinMode(${c.U}_TRIG, OUTPUT);`, `pinMode(${c.U}_ECHO, INPUT);`);
+    s.serial = true;
+    s.loop.push(
+      `// measure distance with ${c.comment}`,
+      `digitalWrite(${c.U}_TRIG, LOW);`,
+      `delayMicroseconds(2);`,
+      `digitalWrite(${c.U}_TRIG, HIGH);`,
+      `delayMicroseconds(10);`,
+      `digitalWrite(${c.U}_TRIG, LOW);`,
+      `long ${c.name}Dur = pulseIn(${c.U}_ECHO, HIGH, 30000);`,
+      `float ${c.name}Cm = ${c.name}Dur * 0.034 / 2;`,
+      `if (${c.name}Cm > 0) {`,
+      `  Serial.print("${c.name} distance: ");`,
+      `  Serial.print(${c.name}Cm);`,
+      `  Serial.println(" cm");`,
+      `}`,
+      `delay(200);`,
+    );
+    return s;
+  },
+  dht: (c) => {
+    const s = blank();
+    const p = c.pin('data');
+    if (!p) { s.missing.push(`${c.comment}: DATA line is not wired`); return s; }
+    const fahr = c.props.unit === 'F';
+    s.includes.push('#include <DHT.h>   // "DHT sensor library" by Adafruit');
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.globals.push(`DHT ${c.name}(${c.U}_PIN, DHT11);`);
+    s.setup.push(`${c.name}.begin();`);
+    s.serial = true;
+    s.loop.push(
+      `// read ${c.comment} (DHT needs >= 1 s between reads)`,
+      `float ${c.name}T = ${c.name}.readTemperature(${fahr ? 'true' : ''});`,
+      `float ${c.name}H = ${c.name}.readHumidity();`,
+      `if (!isnan(${c.name}T) && !isnan(${c.name}H)) {`,
+      `  Serial.print("${c.name}: ");`,
+      `  Serial.print(${c.name}T);`,
+      `  Serial.print("°${fahr ? 'F' : 'C'}  humidity ");`,
+      `  Serial.print(${c.name}H);`,
+      `  Serial.println("%");`,
+      `}`,
+      `delay(1200);`,
+    );
+    return s;
+  },
+  lcd: (c) => {
+    const s = blank();
+    if (!c.wired('sda') || !c.wired('scl')) { s.missing.push(`${c.comment}: SDA and SCL must join the I²C bus`); return s; }
+    const text = String(c.props.text || 'Hello, maker!').slice(0, 16);
+    s.includes.push('#include <Wire.h>', '#include <LiquidCrystal_I2C.h>');
+    s.globals.push(`LiquidCrystal_I2C ${c.name}(0x27, 16, 2);`);
+    s.setup.push(`${c.name}.init();`, `${c.name}.backlight();`, `${c.name}.setCursor(0, 0);`, `${c.name}.print("${text}");`);
+    s.loop.push(`// uptime ticker on ${c.comment}`, `${c.name}.setCursor(0, 1);`, `${c.name}.print("up ");`, `${c.name}.print(millis() / 1000);`, `${c.name}.print(" s   ");`, `delay(500);`);
+    return s;
+  },
+  oled: (c) => {
+    const s = blank();
+    if (!c.wired('sda') || !c.wired('scl')) { s.missing.push(`${c.comment}: SDA and SCL must join the I²C bus`); return s; }
+    s.includes.push('#include <Wire.h>', '#include <Adafruit_GFX.h>', '#include <Adafruit_SSD1306.h>');
+    s.globals.push(`Adafruit_SSD1306 ${c.name}(128, 64, &Wire, -1);`);
+    s.setup.push(`${c.name}.begin(SSD1306_SWITCHCAPVCC, 0x3C);`, `${c.name}.clearDisplay();`, `${c.name}.setTextColor(SSD1306_WHITE);`);
+    s.loop.push(
+      `// counter demo on ${c.comment}`,
+      `${c.name}.clearDisplay();`,
+      `${c.name}.setTextSize(1);`,
+      `${c.name}.setCursor(8, 4);`,
+      `${c.name}.print("ArduFlow demo");`,
+      `${c.name}.setTextSize(2);`,
+      `${c.name}.setCursor(24, 28);`,
+      `${c.name}.print(millis() / 1000);`,
+      `${c.name}.display();`,
+      `delay(500);`,
+    );
+    return s;
+  },
+  buzzer: (c) => {
+    const s = blank();
+    const p = c.pin('pos');
+    if (!p) { s.missing.push(`${c.comment}: + leg is not wired to a pin`); return s; }
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.globals.push(`int ${c.name}Notes[] = {262, 294, 330, 349, 392, 440, 494, 523};`);
+    s.loop.push(
+      `// play a scale on ${c.comment}`,
+      `for (int i = 0; i < 8; i++) {`,
+      `  tone(${c.U}_PIN, ${c.name}Notes[i], 150);`,
+      `  delay(220);`,
+      `}`,
+      `delay(1400);`,
+    );
+    return s;
+  },
+  motor: (c) => {
+    const s = blank();
+    const ena = c.pin('ena'); const i1 = c.pin('in1'); const i2 = c.pin('in2');
+    if (!ena || !i1 || !i2) { s.missing.push(`${c.comment}: ENA, IN1 and IN2 must all be wired`); return s; }
+    const max = Number(c.props.maxSpeed ?? 200);
+    s.defines.push(`const int ${c.U}_ENA = ${ena};`, `const int ${c.U}_IN1 = ${i1};`, `const int ${c.U}_IN2 = ${i2};`);
+    s.globals.push(`const int ${c.name}Max = ${max};`);
+    s.setup.push(`pinMode(${c.U}_ENA, OUTPUT);`, `pinMode(${c.U}_IN1, OUTPUT);`, `pinMode(${c.U}_IN2, OUTPUT);`);
+    s.loop.push(
+      `// spin ${c.comment} forward, coast, reverse`,
+      `digitalWrite(${c.U}_IN1, HIGH);`,
+      `digitalWrite(${c.U}_IN2, LOW);`,
+      `for (int s = 0; s <= ${c.name}Max; s += 5) {`,
+      `  analogWrite(${c.U}_ENA, s);`,
+      `  delay(40);`,
+      `}`,
+      `for (int s = ${c.name}Max; s >= 0; s -= 5) {`,
+      `  analogWrite(${c.U}_ENA, s);`,
+      `  delay(40);`,
+      `}`,
+      `analogWrite(${c.U}_ENA, 0);`,
+      `delay(600);`,
+      `digitalWrite(${c.U}_IN1, LOW);`,
+      `digitalWrite(${c.U}_IN2, HIGH);`,
+      `analogWrite(${c.U}_ENA, ${c.name}Max);`,
+      `delay(1200);`,
+      `analogWrite(${c.U}_ENA, 0);`,
+      `delay(600);`,
+    );
+    return s;
+  },
+  relay: (c) => {
+    const s = blank();
+    const p = c.pin('in');
+    if (!p) { s.missing.push(`${c.comment}: IN control pin is not wired`); return s; }
+    s.defines.push(`const int ${c.U}_IN = ${p};`);
+    s.setup.push(`pinMode(${c.U}_IN, OUTPUT);`, `digitalWrite(${c.U}_IN, LOW);`);
+    s.loop.push(`// toggle ${c.comment}`, `digitalWrite(${c.U}_IN, HIGH);`, `delay(1000);`, `digitalWrite(${c.U}_IN, LOW);`, `delay(1000);`);
+    return s;
+  },
+  ir: (c) => {
+    const s = blank();
+    const p = c.pin('out');
+    if (!p) { s.missing.push(`${c.comment}: OUT pin is not wired`); return s; }
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.setup.push(`pinMode(${c.U}_PIN, INPUT);`);
+    s.serial = true;
+    s.loop.push(`// read ${c.comment}`, `if (digitalRead(${c.U}_PIN) == LOW) {`, `  Serial.println("${c.name}: signal");`, `  delay(200);`, `}`);
+    return s;
+  },
+  neopixel: (c) => {
+    const s = blank();
+    const p = c.pin('din');
+    if (!p) { s.missing.push(`${c.comment}: DIN is not wired`); return s; }
+    const n = Number(c.props.count ?? 8);
+    s.includes.push('#include <Adafruit_NeoPixel.h>');
+    s.defines.push(`const int ${c.U}_PIN = ${p};`, `const int ${c.U}_N = ${n};`);
+    s.globals.push(`Adafruit_NeoPixel ${c.name}(${c.U}_N, ${c.U}_PIN, NEO_GRB + NEO_KHZ800);`);
+    s.setup.push(`${c.name}.begin();`, `${c.name}.show();`);
+    s.loop.push(`// chase ${c.comment}`, `for (int i=0;i<${c.U}_N;i++){ ${c.name}.setPixelColor(i, ${c.name}.Color(0,40,0)); ${c.name}.show(); delay(60); }`, `${c.name}.clear(); ${c.name}.show(); delay(200);`);
+    return s;
+  },
+  ds18b20: (c) => {
+    const s = blank();
+    const p = c.pin('data');
+    if (!p) { s.missing.push(`${c.comment}: DATA line is not wired`); return s; }
+    s.includes.push('#include <OneWire.h>', '#include <DallasTemperature.h>');
+    s.defines.push(`const int ${c.U}_PIN = ${p};`);
+    s.globals.push(`OneWire ${c.name}OneWire(${c.U}_PIN);`, `DallasTemperature ${c.name}Sensors(&${c.name}OneWire);`);
+    s.setup.push(`${c.name}Sensors.begin();`);
+    s.serial = true;
+    s.loop.push(`// read ${c.comment}`, `${c.name}Sensors.requestTemperatures();`, `float ${c.name}T = ${c.name}Sensors.getTempCByIndex(0);`, `Serial.print("${c.name}: ");`, `Serial.print(${c.name}T);`, `Serial.println(" C");`, `delay(1000);`);
+    return s;
+  },
+};
+
+// ─── assembly ──────────────────────────────────────────────────────────
+
+export interface SketchResult {
+  code: string;
+  problems: { kind: 'warn' | 'error'; msg: string }[];
+  serialUsed: boolean;
+}
+
+export function buildSketch(
+  nodes: Node[],
+  edges: Edge[],
+  board: BoardDef,
+  projectName: string,
+): SketchResult {
+  const resolved = resolvePins(nodes, edges, board);
+  const problems: { kind: 'warn' | 'error'; msg: string }[] = [];
+  const sections: { name: string; sec: Section }[] = [];
+  const adcMax = board.id === 'esp32' ? 4095 : 1023;
+
+  for (const n of nodes) {
+    if (n.type === 'board') continue;
+    const data = n.data as { compType: string; label: string; props?: Record<string, string | number> };
+    const def: ComponentDef | undefined = getComponent(data.compType);
+    if (!def || def.passive) continue;
+    const gen = GENS[def.type];
+    if (!gen) continue;
+    const assign = resolved[n.id];
+    const name = data.label.replace(/[^a-zA-Z0-9]/g, '') || data.compType;
+    const sec = gen({
+      id: n.id,
+      name: name.charAt(0).toLowerCase() + name.slice(1),
+      U: upper(name),
+      props: data.props ?? {},
+      pin: (pid) => assign?.map[pid]?.codeLabel ?? null,
+      wired: (pid) => !!assign?.map[pid],
+      comment: data.label,
+    });
+    // fix ADC max placeholder
+    sec.globals = sec.globals.map((g) => g.replace(/__ADC_MAX__/g, String(adcMax)));
+    for (const m of sec.missing) problems.push({ kind: 'error', msg: m });
+    sections.push({ name: data.label, sec });
+
+    // resistor warning for LEDs
+    if (def.type === 'led') {
+      const via = assign?.via['anode'] ?? [];
+      const direct = !!assign?.map['anode'];
+      if (direct && via.length === 0)
+        problems.push({ kind: 'warn', msg: `${data.label} has no current-limiting resistor — add one from the palette` });
+      if (assign?.map['anode'] && !assign?.map['cathode'])
+        problems.push({ kind: 'warn', msg: `${data.label} cathode is floating — wire it to GND` });
+    }
+  }
+
+  const dedupe = (arr: string[]) => [...new Set(arr)];
+  const includes = dedupe(sections.flatMap((s) => s.sec.includes));
+  const defines = sections.flatMap((s) => s.sec.defines);
+  const globals = sections.flatMap((s) => s.sec.globals);
+  const setup = sections.flatMap((s) => s.sec.setup);
+  const loop = sections.flatMap((s) => s.sec.loop);
+  const serialUsed = sections.some((s) => s.sec.serial);
+
+  const date = new Date().toISOString().slice(0, 10);
+  const parts: string[] = [];
+  parts.push(
+    `/*`,
+    ` * ${projectName}`,
+    ` * Generated with ArduFlow Studio · ${date}`,
+    ` * Board: ${board.name} (${board.fqbn})`,
+    ` */`,
+  );
+  if (includes.length) parts.push(``, ...includes);
+  if (defines.length) parts.push(``, ...defines);
+  if (globals.length) parts.push(``, ...globals);
+  parts.push(``, `void setup() {`);
+  if (serialUsed) parts.push(`  Serial.begin(9600);`);
+  parts.push(...setup.map((l) => `  ${l}`), `}`);
+  parts.push(``, `void loop() {`);
+  if (loop.length === 0) parts.push(`  // add components on the canvas to generate logic`);
+  else parts.push(...loop.map((l) => (l.startsWith('//') || l === '}' || l.endsWith('{') || l.startsWith(' ') ? `  ${l}` : `  ${l}`)));
+  parts.push(`}`, ``);
+  return { code: parts.join('\n'), problems, serialUsed };
+}

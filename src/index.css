@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-rise: rise 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-toast: toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: #0a0e10;
+  color: #cbd5e1;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(45, 212, 191, 0.28);
+  color: #ecfeff;
+}
+
+/* ── scrollbars ─────────────────────────────────────────────── */
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: #1f2b32;
+  border-radius: 8px;
+  border: 2px solid #0a0e10;
+}
+*::-webkit-scrollbar-thumb:hover { background: #2b3a43; }
+
+/* ── react flow chrome ──────────────────────────────────────── */
+.react-flow { background: #0a0e10; }
+.react-flow__node { outline: none; }
+.react-flow__node:focus { outline: none; }
+
+.react-flow__handle.pin-handle {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #0a0e10;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.12), 0 0 8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: crosshair;
+  z-index: 20;
+}
+.react-flow__handle.pin-handle:hover,
+.react-flow__handle.pin-handle.connectingfrom {
+  box-shadow: 0 0 0 2.5px rgba(45, 212, 191, 0.6), 0 0 16px rgba(45, 212, 191, 0.5);
+}
+.react-flow__handle.board-pin {
+  width: 12px;
+  height: 12px;
+}
+
+.react-flow__edge-path {
+  transition: stroke-width 0.12s ease, opacity 0.12s ease;
+}
+.react-flow__edge:hover .react-flow__edge-path { stroke-width: 3.25; }
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #2dd4bf !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 5px rgba(45, 212, 191, 0.55));
+}
+.react-flow__edge.selectable:hover .react-flow__edge-interaction { stroke-width: 16; }
+
+.react-flow__connection-path { stroke: #2dd4bf; }
+
+.react-flow__controls {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #212d34;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+}
+.react-flow__controls button {
+  background: #10181c;
+  border-bottom: 1px solid #1b262c;
+  color: #94a3b8;
+  width: 30px;
+  height: 30px;
+}
+.react-flow__controls button:hover { background: #16222a; color: #5eead4; }
+.react-flow__controls button svg { fill: currentColor; }
+
+.react-flow__minimap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #212d34;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+}
+.react-flow__attribution { display: none; }
+
+.react-flow__nodesselection-rect,
+.react-flow__selection {
+  background: rgba(45, 212, 191, 0.06);
+  border: 1px dashed rgba(45, 212, 191, 0.4);
+}
+
+/* subtle circuit texture on the canvas pane */
+.react-flow__pane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 500px at 30% -10%, rgba(45, 212, 191, 0.05), transparent 60%),
+    radial-gradient(900px 420px at 85% 110%, rgba(56, 189, 248, 0.04), transparent 60%);
+}
+
+/* ── code tokens ────────────────────────────────────────────── */
+.tok-kw { color: #f472b6; }
+.tok-type { color: #7dd3fc; }
+.tok-st { color: #a7f3d0; }
+.tok-num { color: #fbbf24; }
+.tok-cm { color: #4b6472; font-style: italic; }
+.tok-pre { color: #c084fc; }
+.tok-fn { color: #5eead4; }
+.tok-const { color: #fdba74; }
+
+.code-comment-line { background: rgba(75, 100, 114, 0.06); }
+
+/* number input spinners off */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+/* select dropdown arrow color */
+select option { background: #10181c; color: #e2e8f0; }
+/* Light / white UI overrides */
+html.light, html.light body, html.light #root { background: #f8fafc; color: #0f172a; }
+html.light .react-flow { background: #f8fafc; }
+html.light .react-flow__pane::after { background: none; }
+html.light .react-flow__controls, html.light .react-flow__minimap { border-color: #cbd5e1; box-shadow: 0 8px 20px -8px rgba(0,0,0,0.15); }
+html.light .react-flow__controls button { background: #ffffff; border-color: #e2e8f0; color: #475569; }
+html.light .react-flow__controls button:hover { background: #f1f5f9; color: #0d9488; }
+html.light .react-flow__handle.pin-handle { border-color: #f8fafc; }
+html.light select option { background: #ffffff; color: #0f172a; }
+
+/* text slate overrides */
+html.light .text-slate-100 { color: #0f172a; }
+html.light .text-slate-200 { color: #1e293b; }
+html.light .text-slate-300 { color: #334155; }
+html.light .text-slate-400 { color: #475569; }
+html.light .text-slate-500 { color: #64748b; }
+html.light .text-slate-600 { color: #94a3b8; }
+html.light .text-slate-700 { color: #cbd5e1; }
+
+/* common dark hex surface overrides */
+html.light .bg-\[\#0a0e10\], html.light .bg-\[\#0b1114\], html.light .bg-\[\#0c1215\], html.light .bg-\[\#0d1417\], html.light .bg-\[\#0e1518\], html.light .bg-\[\#0e1519\], html.light .bg-\[\#0f172a\] { background-color: #ffffff !important; }
+html.light .bg-\[\#10171b\], html.light .bg-\[\#10181c\], html.light .bg-\[\#11181c\], html.light .bg-\[\#121a1f\], html.light .bg-\[\#131d22\], html.light .bg-\[\#141c21\], html.light .bg-\[\#152026\], html.light .bg-\[\#162027\], html.light .bg-\[\#16232a\], html.light .bg-\[\#182026\], html.light .bg-\[\#182127\] { background-color: #f8fafc !important; }
+html.light .bg-\[\#070c0f\], html.light .bg-\[\#090e11\], html.light .bg-\[\#0a1013\], html.light .bg-\[\#0d1316\], html.light .bg-\[\#0e1417\], html.light .bg-\[\#121a1f\] { background-color: #f1f5f9 !important; }
+html.light .border-\[\#1a2328\], html.light .border-\[\#1b252b\], html.light .border-\[\#1d272d\], html.light .border-\[\#202b32\], html.light .border-\[\#212c33\], html.light .border-\[\#212d34\], html.light .border-\[\#222d34\], html.light .border-\[\#22303a\], html.light .border-\[\#232e34\], html.light .border-\[\#24333a\], html.light .border-\[\#25313a\], html.light .border-\[\#26323a\], html.light .border-\[\#2a363d\], html.light .border-\[\#2b3840\], html.light .border-\[\#2b3b42\], html.light .border-\[\#2d3b42\], html.light .border-\[\#3b4a53\] { border-color: #cbd5e1 !important; }

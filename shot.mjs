@@ -1,0 +1,13 @@
+import { chromium } from 'playwright-core';
+const exe = process.env.HOME + '/.cache/ms-playwright/chromium_headless_shell-1187/chrome-linux/headless_shell';
+const url = process.argv[2] || 'http://localhost:4173';
+const out = process.argv[3] || '/tmp/shot.png';
+const browser = await chromium.launch({ executablePath: exe });
+const page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, deviceScaleFactor: 1.5 });
+page.on('console', (m) => { if (m.type() === 'error') console.log('CONSOLE ERROR:', m.text().slice(0, 300)); });
+page.on('pageerror', (e) => console.log('PAGE ERROR:', String(e).slice(0, 500)));
+await page.goto(url, { waitUntil: 'networkidle' });
+await page.waitForTimeout(2500);
+await page.screenshot({ path: out });
+await browser.close();
+console.log('saved', out);
