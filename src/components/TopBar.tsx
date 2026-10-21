@@ -327,7 +327,7 @@ export function AiBuildModal({ onClose }: { onClose: () => void }) {
   const loadProject = useProject((s) => s.loadProject);
   const toast = useProject((s) => s.toast);
   const [prompt, setPrompt] = useState('');
-  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'opencode'>(() => {
+  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'openrouter' | 'opencode'>(() => {
     try { return (localStorage.getItem('arduflow.aiProvider') as any) || 'openai'; } catch { return 'openai'; }
   });
   const [apiKey, setApiKey] = useState(() => {
@@ -356,6 +356,8 @@ export function AiBuildModal({ onClose }: { onClose: () => void }) {
       let res: Response;
       if (provider === 'openai') {
         res = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${apiKey.trim()}` } });
+      } else if (provider === 'openrouter') {
+        res = await fetch('https://openrouter.ai/api/v1/models', { headers: { Authorization: `Bearer ${apiKey.trim()}` } });
       } else {
         res = await fetch('https://api.anthropic.com/v1/models', { headers: { 'x-api-key': apiKey.trim(), 'anthropic-version': '2023-06-01' } });
       }
@@ -397,10 +399,12 @@ Allowed part types: led, resistor, button, pot, servo, ultrasonic, dht, lcd, ole
       let headers: Record<string, string> = { 'Content-Type': 'application/json' };
       let body: any = {};
 
-      if (provider === 'openai') {
-        endpoint = 'https://api.openai.com/v1/chat/completions';
+      if (provider === 'openai' || provider === 'openrouter') {
+        endpoint = provider === 'openai'
+          ? 'https://api.openai.com/v1/chat/completions'
+          : 'https://openrouter.ai/api/v1/chat/completions';
         headers.Authorization = `Bearer ${apiKey.trim()}`;
-        body = { model: model || 'gpt-4o-mini', messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }], temperature: 0.3 };
+        body = { model: model || (provider === 'openai' ? 'gpt-4o-mini' : 'openai/gpt-4o-mini'), messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }], temperature: 0.3 };
       } else if (provider === 'anthropic') {
         endpoint = 'https://api.anthropic.com/v1/messages';
         headers['x-api-key'] = apiKey.trim();
@@ -415,7 +419,7 @@ Allowed part types: led, resistor, button, pot, servo, ultrasonic, dht, lcd, ole
       const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
       if (!res.ok) throw new Error(`${provider} ${res.status}: ${await res.text()}`);
       const data = await res.json();
-      const text = provider === 'openai'
+      const text = (provider === 'openai' || provider === 'openrouter')
         ? (data?.choices?.[0]?.message?.content ?? '')
         : (data?.content?.[0]?.text ?? '');
       const match = text.match(/\{[\s\S]*\}/);
@@ -459,6 +463,7 @@ Allowed part types: led, resistor, button, pot, servo, ultrasonic, dht, lcd, ole
             >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic (Claude)</option>
+              <option value="openrouter">OpenRouter</option>
               <option value="opencode">OpenCode (MCP)</option>
             </select>
             <button
@@ -475,7 +480,7 @@ Allowed part types: led, resistor, button, pot, servo, ultrasonic, dht, lcd, ole
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 type="password"
-                placeholder={`${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key (stored locally)`}
+                placeholder={`${provider === 'openai' ? 'OpenAI' : provider === 'anthropic' ? 'Anthropic' : 'OpenRouter'} API key (stored locally)`}
                 className="w-full rounded-lg border border-[#2a363d] bg-[#090e11] px-3 py-2 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
               />
               {models.length > 0 && (
