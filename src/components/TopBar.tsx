@@ -327,19 +327,62 @@ export function AiBuildModal({ onClose }: { onClose: () => void }) {
   const loadProject = useProject((s) => s.loadProject);
   const toast = useProject((s) => s.toast);
   const [prompt, setPrompt] = useState('');
-  const [apiKey, setApiKey] = useState(() => {
-    try { return localStorage.getItem('arduflow.openaiKey') ?? ''; } catch { return ''; }
+  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'opencode'>(() => {
+    try { return (localStorage.getItem('arduflow.aiProvider') as any) || 'openai'; } catch { return 'openai'; }
   });
+  const [apiKey, setApiKey] = useState(() => {
+    try { return localStorage.getItem(`arduflow.${provider}Key`) ?? ''; } catch { return ''; }
+  });
+  const [model, setModel] = useState(() => {
+    try { return localStorage.getItem(`arduflow.${provider}Model`) ?? ''; } catch { return ''; }
+  });
+  const [models, setModels] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [status, setStatus] = useState('');
+
+  const storageKey = (k: string) => `arduflow.${provider}${k}`;
+
+  const testConnection = async () => {
+    if (provider === 'opencode') {
+      setStatus('OpenCode uses MCP config (opencode.jsonc). Verify with: opencode mcp list');
+      setModels([]);
+      return;
+    }
+    if (!apiKey.trim()) { toast('API key required', 'err'); return; }
+    setTesting(true);
+    setStatus('Testing connection...');
+    try {
+      let res: Response;
+      if (provider === 'openai') {
+        res = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${apiKey.trim()}` } });
+      } else {
+        res = await fetch('https://api.anthropic.com/v1/models', { headers: { 'x-api-key': apiKey.trim(), 'anthropic-version': '2023-06-01' } });
+      }
+      if (!res.ok) throw new Error(`${provider} ${res.status}`);
+      const data = await res.json();
+      const ids = (data?.data ?? []).map((m: any) => m.id);
+      setModels(ids.slice(0, 20));
+      if (!model && ids.length) setModel(ids[0]);
+      setStatus(`Connected. ${ids.length} models available.`);
+      try { localStorage.setItem(storageKey('Key'), apiKey.trim()); } catch { /* ignore */ }
+    } catch (e) {
+      setStatus(`Connection failed: ${e instanceof Error ? e.message : String(e)}`);
+      toast('Connection test failed', 'err');
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const generate = async () => {
     if (!prompt.trim()) { toast('Enter a prompt first', 'warn'); return; }
-    if (!apiKey.trim()) { toast('OpenAI API key required', 'err'); return; }
+    if (provider !== 'opencode' && !apiKey.trim()) { toast('API key required', 'err'); return; }
     setBusy(true);
     setStatus('Contacting AI...');
     try {
-      try { localStorage.setItem('arduflow.openaiKey', apiKey.trim()); } catch { /* ignore */ }
+      try { localStorage.setItem('arduflow.aiProvider', provider); } catch { /* ignore */ }
+      try { localStorage.setItem(storageKey('Key'), apiKey.trim()); localStorage.setItem(storageKey('Model'), model); } catch { /* ignore */ }
+
       const system = `You are an Arduino project generator for ArduFlow Studio.
 Return ONLY valid JSON (no markdown) with this schema:
 {
@@ -348,36 +391,33 @@ Return ONLY valid JSON (no markdown) with this schema:
   "parts": [ { "type": string, "id": string, "x": number, "y": number, "props": object } ],
   "wires": [ [ "partId.pinId", "partId.pinId" ] ]
 }
-Allowed part types: led, resistor, button, pot, servo, ultrasonic, dht, lcd, oled, buzzer, motor, relay, ir, neopixel, ds18b20.
-Pin ids:
- led: anode, cathode
- resistor: A, B
- button: p1, p2
- pot: vcc, gnd, out
- servo: vcc, gnd, sig
- ultrasonic: vcc, trig, echo, gnd
- dht: vcc, data, gnd
- lcd/oled: vcc, gnd, sda, scl
- buzzer: pos, neg
- motor: ena, in1, in2
- relay: vcc, gnd, in
- ir: vcc, out, gnd
- neopixel: vcc, gnd, din
- ds18b20: vcc, data, gnd
- board pins: board.5V, board.GND, board.D2..D13, board.A0..A5, board.SDA, board.SCL (use valid board pins).
- Auto-chain LEDs through a 220 ohm resistor. Keep layout tidy (x 40..700, y 40..400).`;
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey.trim()}` },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
-          temperature: 0.3,
-        }),
-      });
-      if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+Allowed part types: led, resistor, button, pot, servo, ultrasonic, dht, lcd, oled, buzzer, motor, relay, ir, neopixel, ds18b20, rgb, stepper, keypad, sevenseg, breadboard.`;
+
+      let endpoint = '';
+      let headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      let body: any = {};
+
+      if (provider === 'openai') {
+        endpoint = 'https://api.openai.com/v1/chat/completions';
+        headers.Authorization = `Bearer ${apiKey.trim()}`;
+        body = { model: model || 'gpt-4o-mini', messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }], temperature: 0.3 };
+      } else if (provider === 'anthropic') {
+        endpoint = 'https://api.anthropic.com/v1/messages';
+        headers['x-api-key'] = apiKey.trim();
+        headers['anthropic-version'] = '2023-06-01';
+        body = { model: model || 'claude-3-5-sonnet-20241022', max_tokens: 4096, messages: [{ role: 'user', content: `${system}\n\n${prompt}` }] };
+      } else {
+        setStatus('OpenCode generation is not available in-browser. Use OpenAI/Anthropic, or run via terminal.');
+        setBusy(false);
+        return;
+      }
+
+      const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
+      if (!res.ok) throw new Error(`${provider} ${res.status}: ${await res.text()}`);
       const data = await res.json();
-      const text = data?.choices?.[0]?.message?.content ?? '';
+      const text = provider === 'openai'
+        ? (data?.choices?.[0]?.message?.content ?? '')
+        : (data?.content?.[0]?.text ?? '');
       const match = text.match(/\{[\s\S]*\}/);
       const json = JSON.parse(match ? match[0] : text);
       loadProject(json);
@@ -393,8 +433,8 @@ Pin ids:
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--bg)] shadow-2xl animate-rise" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-5 py-4">
+      <div className="w-full max-w-xl rounded-2xl border border-[#26323a] bg-[#0e1518] shadow-2xl animate-rise" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2.5 border-b border-[#202b32] px-5 py-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-400/40 bg-violet-400/10 text-violet-300">
             <Sparkles size={15} />
           </span>
@@ -404,32 +444,75 @@ Pin ids:
           </div>
         </div>
         <div className="space-y-3 px-5 py-4">
+          <div className="flex gap-2">
+            <select
+              value={provider}
+              onChange={(e) => {
+                const p = e.target.value as any;
+                setProvider(p);
+                try { setApiKey(localStorage.getItem(`arduflow.${p}Key`) ?? ''); } catch { setApiKey(''); }
+                try { setModel(localStorage.getItem(`arduflow.${p}Model`) ?? ''); } catch { setModel(''); }
+                setModels([]);
+                setStatus('');
+              }}
+              className="h-8 rounded-lg border border-[#2a363d] bg-[#121a1f] px-2 text-[11.5px] text-slate-200"
+            >
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="opencode">OpenCode (MCP)</option>
+            </select>
+            <button
+              onClick={() => void testConnection()}
+              disabled={testing || provider === 'opencode'}
+              className="h-8 rounded-lg border border-teal-400/45 bg-teal-400/15 px-3 text-[11.5px] font-bold text-teal-200 hover:bg-teal-400/25 disabled:opacity-50"
+            >
+              {testing ? 'Testing...' : 'Test connection'}
+            </button>
+          </div>
+          {provider !== 'opencode' && (
+            <>
+              <input
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                type="password"
+                placeholder={`${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key (stored locally)`}
+                className="w-full rounded-lg border border-[#2a363d] bg-[#090e11] px-3 py-2 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
+              />
+              {models.length > 0 && (
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="w-full rounded-lg border border-[#2a363d] bg-[#090e11] px-3 py-2 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
+                >
+                  {models.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              )}
+            </>
+          )}
+          {provider === 'opencode' && (
+            <p className="text-[11px] text-slate-400">
+              OpenCode generation is not available in-browser. Use OpenAI/Anthropic, or run via terminal with your MCP-connected model.
+            </p>
+          )}
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}
             placeholder="e.g. Blink an LED on pin 13, read a potentiometer, show value on LCD"
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
-          />
-          <input
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            type="password"
-            placeholder="OpenAI API key (stored locally)"
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
+            className="w-full rounded-lg border border-[#2a363d] bg-[#090e11] p-3 text-[12px] text-slate-200 outline-none focus:border-violet-400/60"
           />
           {status && <p className="font-mono text-[10px] text-slate-400">{status}</p>}
           <div className="flex items-center gap-2">
             <button
               onClick={() => void generate()}
-              disabled={busy}
+              disabled={busy || provider === 'opencode'}
               className="flex h-8 items-center gap-1.5 rounded-lg border border-violet-400/45 bg-violet-400/15 px-3 text-[11.5px] font-bold text-violet-200 hover:bg-violet-400/25 disabled:opacity-50"
             >
               {busy ? 'Generating...' : 'Generate project'}
             </button>
             <button
               onClick={onClose}
-              className="ml-auto h-8 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 text-[11.5px] font-semibold text-slate-300 hover:text-slate-100"
+              className="ml-auto h-8 rounded-lg border border-[#2a363d] bg-[#121a1f] px-3 text-[11.5px] font-semibold text-slate-300 hover:text-slate-100"
             >
               Close
             </button>
